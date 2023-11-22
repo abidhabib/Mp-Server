@@ -11,20 +11,27 @@ import path, { join } from 'path';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path'
 import dotenv from 'dotenv';
+import https from 'https';
+import fs from 'fs';
 dotenv.config();
 const app = express();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
+
 app.use('/uploads', express.static(join(__dirname, 'uploads')));
 app.use(bodyParser.json());
 app.use(cors({
-origin: 'http://localhost:5173',
+origin: 'https://maps-earning.com',
 methods: ['GET','HEAD','PUT','PATCH','POST','DELETE'],  // Added 'PUT' here
 
 credentials: true,
 
 }));
+const options = {
+  key: fs.readFileSync('/etc/letsencrypt/live/maps-earning.com/privkey.pem'),
+  cert: fs.readFileSync('/etc/letsencrypt/live/maps-earning.com/fullchain.pem')
+};
 
 app.use(cookieParser());
 app.use(express.json());
@@ -37,11 +44,13 @@ app.use(session({
 }));
 const PORT=8082;
 const con = mysql.createConnection({
-    host: 'localhost',
-    user: 'root',
-    password: '',
-    database: 'maps', 
+    host: '127.0.0.1',
+    user: 'maps',
+    password: 'Pakistan@2k17',
+    database: 'maps',
 });
+
+
 
 con.connect(function(err){
     if (err) {
@@ -51,6 +60,8 @@ con.connect(function(err){
     }
 }
 );
+
+
 
 
 app.get('/', (req, res) => {
@@ -1317,6 +1328,8 @@ app.get('/unapproved-unpaid-users-count', (req, res) => {
     });
 });
 
-app.listen(PORT, () => {
-    console.log('Listening on port ' + PORT);
+
+https.createServer(options, app).listen(PORT, () => {
+  console.log('HTTPS Server running on port '+PORT);
 });
+
